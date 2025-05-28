@@ -1,0 +1,16 @@
+{% extends 'main/layout.html' %}
+
+{% block title %}Создать заказ{% endblock %}
+
+{% block content %}
+<div class="features">
+    <h1>Форма для создания заказа</h1>
+    <form method="post" action="">
+        {% csrf_token %}
+        {{form.destination_address}}<br>
+        {{form.date_of_accomplishment}}<br>
+        <span>{{error}}</span>
+        <button class="btn btn-success" type="submit">Создать заказ</button>
+    </form>
+</div>
+{% endblock %}
