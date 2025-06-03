@@ -9,7 +9,7 @@ https://docs.djangoproject.com/en/5.2/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.2/ref/settings/
 """
-
+import os
 from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -75,9 +75,24 @@ WSGI_APPLICATION = "bd_app.wsgi.application"
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
 DATABASES = {
-    "default": {
-        "ENGINE": "django.db.backends.sqlite3",
-        "NAME": BASE_DIR / "db.sqlite3",
+   'default': {  # SQL база данных (например, PostgreSQL, MySQL, SQLite)
+        'ENGINE': 'django.db.backends.postgresql',  # Замените на ваш движок
+        'NAME': 'your_sql_db_name',  # Имя базы данных
+        'USER': 'your_sql_user',
+        'PASSWORD': 'your_sql_password',
+        'HOST': 'your_sql_host',
+        'PORT': '5432', # или ваш порт для SQL
+    },
+    'mongodb': {  # MongoDB (с использованием Djongo)
+        'ENGINE': 'djongo',
+        'NAME': 'your_mongodb_db_name',  # Имя базы данных MongoDB
+        'CLIENT': {
+            'host': 'db', # Имя сервиса Docker Compose (или "localhost")
+            'port': 27017,
+            'username': 'your_mongodb_user',
+            'password': 'your_mongodb_password',
+            'authSource': 'admin', # Или другая база данных для аутентификации
+        }
     }
 }
 
@@ -118,9 +133,12 @@ USE_TZ = True
 
 STATIC_URL = "static/"
 STATICFILES_DIRS = [
-    BASE_DIR / "static",
+    BASE_DIR / "main"/ "static",
    
 ]
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+
+
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
