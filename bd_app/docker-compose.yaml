@@ -1,0 +1,49 @@
+
+
+services:
+  web:
+    build: .  # Указывает на текущую директорию для построения образа (где находится Dockerfile)
+    command: python manage.py runserver 0.0.0.0:8000  # Переопределяем CMD из Dockerfile
+    ports:
+      - "8000:8000"  # Привязываем порт 8000 контейнера к порту 8000 хоста
+    volumes:
+      - .:/app  # Монтируем текущую директорию в контейнер (для разработки)
+      - static_volume:/app/static  # Для статики
+    depends_on:
+      - db  # Зависимость от базы данных (если используете)
+    environment:
+      - DEBUG=1  # Включаем режим отладки (можно настроить переменными окружения)
+
+  db:
+    image: mongo:7.0 # Используем официальный образ MongoDB
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=myuser  # Имя пользователя
+      - MONGO_INITDB_ROOT_PASSWORD=mypassword  # Пароль
+      - MONGO_INITDB_DATABASE=mydatabase  # Название базы данных
+    volumes:
+      - db_volume:/data/db  # Создаем именованный volume для хранения данных MongoDB
+    ports:
+      - "27017:27017"  # Публикуем порт 27017 контейнера на порт 27017 хоста
+  # Дополнительные сервисы (например, Celery, Redis) можно добавить здесь
+  # celery:
+  #   build: .
+  #   command: celery -A myproject worker -l info
+  #   volumes:
+  #     - .:/app
+  #   depends_on:
+  #     - db
+  #     - redis
+  #   environment:
+  #     - DJANGO_SETTINGS_MODULE=myproject.settings  # Важно для Celery
+
+  # redis:
+  #   image: redis:latest
+  #   ports:
+  #     - "6379:6379"
+  #   volumes:
+  #     - redis_volume:/data
+
+volumes:
+  db_volume:  # Именованный volume для базы данных PostgreSQL
+  static_volume:  # Именованный volume для статики
+  # redis_volume:  # Именованный volume для Redis

@@ -1,0 +1,66 @@
+body {
+    background: rgba(158, 153, 208, 0.733);
+}
+
+aside {
+    float: left;
+    background: rgba(70, 54, 93, 0.77);
+    width: 20%;
+    padding: 2.5%;
+    height:  100vh;
+    color: rgb(26, 42, 74);
+    border-right: 5px solid  rgba(70, 54, 93, 0.77)
+}
+
+aside img {
+    width: 80px;
+    float: left;
+}
+
+aside .logo {
+    font-size: 40px;
+    margin-left: 10px;
+    font-weight: bold;
+    position: relative;
+    
+}
+
+aside h3 {
+    margin-top: 50px;
+    font-size: 28px;
+}
+
+aside ul {
+    list-style:none;
+}
+
+aside ul li {
+    color:rgb(26, 42, 74);
+    display: block;
+    margin-top: 25px;
+    transition: all .6s ease;
+}
+
+aside ul li :hover, aside ul a :hover {
+    color: rgb(26, 42, 74);
+    text-decoration: none;
+    transform: scale(1.05);
+}
+
+main .features {
+    float: left;
+    color: rgb(26, 42, 74);
+    margin-top: 100px;
+    text-align: center;
+    width: 75%;
+}
+
+main .features h1 {
+    font-size: 50px;
+}
+
+form {
+    margin-left: 32%;
+    width: 500px;
+    margin-top: 50px;
+}
