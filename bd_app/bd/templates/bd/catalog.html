@@ -1,0 +1,29 @@
+{% extends 'main/layout.html' %}
+{% block title %}Каталог ТС{% endblock %}
+
+{% block content %}
+<div class="features">
+    <h1>Каталог ТС</h1>
+    <p>Будут отображаться карточки видов ТС с описанием и ценой,статусом</p>
+</div>
+    <div class="card-group">
+    {% for type_tc_ in type_tc_list %}
+    
+    <div class="card">
+        <a href="./catalog.html">
+            <img src=""
+                class = "card-img-top" alt="csfe">
+        </a>
+        <div class="card-body">
+            <h5 class="card-title">{{name_type_tc}}</h5>
+            <p class="card-text">Цена:{{type_tc_cost}}</p>
+            <ul class="category_list">
+                <li><a href="">rtrtt</a></li>
+                <li><a href="">vvvv</a></li>
+            </ul>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+{% endblock %}
