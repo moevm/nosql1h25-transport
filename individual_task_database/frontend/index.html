@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Driver List</title>
+  <style>
+    table, th, td { border: 1px solid black; border-collapse: collapse; padding: 5px; }
+    input, select { margin: 5px; }
+  </style>
+</head>
+<body>
+<h2>Driver Table</h2>
+<nav>
+  <a href="index.html">Таблица</a> |
+  <a href="form.html">Добавить/Редактировать</a> |
+  <a href="import.html">Импорт/Экспорт</a>
+</nav>
+<br>
+<label>Category: <input id="filterCategory"></label>
+<label>Experience From: <input id="filterExperienceMin" type="number"></label>
+<label>To: <input id="filterExperienceMax" type="number"></label>
+<label>Available:
+  <select id="filterAvailable">
+    <option value="">Any</option>
+    <option value="true">Yes</option>
+    <option value="false">No</option>
+  </select>
+</label>
+<button onclick="fetchDrivers()">Filter</button>
+<table id="driversTable">
+  <thead>
+    <tr>
+      <th>Name</th><th>Categories</th><th>Experience</th><th>Available</th><th>Comments</th>
+    </tr>
+  </thead>
+  <tbody></tbody>
+</table>
+<script>
+  const apiUrl = 'http://localhost:8000';
+  async function fetchDrivers() {
+    const category = document.getElementById("filterCategory").value;
+    const min = document.getElementById("filterExperienceMin").value;
+    const max = document.getElementById("filterExperienceMax").value;
+    const available = document.getElementById("filterAvailable").value;
+    const params = new URLSearchParams();
+    if (category) params.append("category", category);
+    if (min) params.append("min_experience", min);
+    if (max) params.append("max_experience", max);
+    if (available !== '') params.append("is_available", available);
+    const res = await fetch(`${apiUrl}/drivers?${params}`);
+    const data = await res.json();
+    const tbody = document.querySelector("#driversTable tbody");
+    tbody.innerHTML = "";
+    data.forEach(d => {
+      tbody.innerHTML += `<tr>
+        <td>${d.name}</td>
+        <td>${d.license_categories.join(', ')}</td>
+        <td>${d.experience_years}</td>
+        <td>${d.is_available}</td>
+        <td>${d.comments || ''}</td>
+      </tr>`;
+    });
+  }
+  fetchDrivers();
+</script>
+</body>
+</html>
