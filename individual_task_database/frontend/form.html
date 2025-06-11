@@ -1,0 +1,131 @@
+
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <title>Добавить / Редактировать Водителя</title>
+  <style>
+    body { font-family: Arial, sans-serif; max-width: 600px; margin: 20px auto; }
+    label { display: block; margin-top: 10px; }
+    input, select, textarea { width: 100%; padding: 8px; margin-top: 4px; box-sizing: border-box; }
+    button { margin-top: 15px; margin-right: 10px; padding: 8px 15px; cursor: pointer; }
+  </style>
+</head>
+<body>
+  <nav style="margin-bottom:20px;">
+    <a href="index.html" style="margin-right:15px;">Таблица</a>
+    <a href="form.html" style="margin-right:15px; font-weight: bold;">Добавить/Редактировать</a>
+    <a href="import.html">Импорт/Экспорт</a>
+  </nav>
+  <h2>Добавить / Редактировать Водителя</h2>
+
+  <label for="name">Имя водителя</label>
+  <input id="name" placeholder="Иванов И.И." />
+
+  <label for="categories">Категории лицензий (через запятую)</label>
+  <input id="categories" placeholder="B, C" />
+
+  <label for="experience">Опыт (лет)</label>
+  <input id="experience" type="number" min="0" placeholder="5" />
+
+  <label for="available">Доступность</label>
+  <select id="available">
+    <option value="true">Доступен</option>
+    <option value="false">Недоступен</option>
+  </select>
+
+  <label for="comments">Комментарии</label>
+  <textarea id="comments" placeholder="Работает по выходным"></textarea>
+
+  <div>
+    <button type="button" onclick="submitDriver()">Добавить / Обновить</button>
+    <button type="button" onclick="deleteDriver()">Удалить</button>
+    <button type="button" onclick="clearForm()">Очистить</button>
+  </div>
+
+  <script>
+    const apiUrl = 'http://localhost:8000';
+
+    async function submitDriver() {
+      const driver = {
+        name: document.getElementById("name").value.trim(),
+        license_categories: document.getElementById("categories").value
+          .split(',')
+          .map(c => c.trim())
+          .filter(c => c !== ""),
+        experience_years: parseInt(document.getElementById("experience").value),
+        is_available: document.getElementById("available").value === 'true',
+        comments: document.getElementById("comments").value.trim()
+      };
+
+      if (!driver.name) {
+        alert("Введите имя водителя");
+        return;
+      }
+      if (isNaN(driver.experience_years)) {
+        alert("Введите корректный опыт работы");
+        return;
+      }
+
+      // Пробуем обновить (PUT)
+      const resPut = await fetch(`${apiUrl}/drivers/${encodeURIComponent(driver.name)}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(driver)
+      });
+
+      if (resPut.ok) {
+        alert('Водитель добавлен или обновлен');
+        clearForm();
+        return;
+      } else if (resPut.status === 404) {
+        // Если нет, создаём (POST)
+        const resPost = await fetch(`${apiUrl}/drivers`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(driver)
+        });
+        if (resPost.ok) {
+          alert('Водитель добавлен');
+          clearForm();
+        } else {
+          alert('Ошибка при добавлении водителя');
+        }
+      } else {
+        alert('Ошибка при сохранении водителя');
+      }
+    }
+
+    async function deleteDriver() {
+      const name = document.getElementById("name").value.trim();
+      if (!name) {
+        alert('Введите имя водителя для удаления');
+        return;
+      }
+
+      if (!confirm(`Удалить водителя "${name}"?`)) return;
+
+      const res = await fetch(`${apiUrl}/drivers/${encodeURIComponent(name)}`, {
+        method: 'DELETE'
+      });
+
+      if (res.ok) {
+        alert('Водитель удален');
+        clearForm();
+      } else {
+        alert('Ошибка при удалении водителя');
+      }
+    }
+
+    function clearForm() {
+      document.getElementById("name").value = '';
+      document.getElementById("categories").value = '';
+      document.getElementById("experience").value = '';
+      document.getElementById("available").value = 'true';
+      document.getElementById("comments").value = '';
+    }
+  </script>
+</body>
+</html>
+
+
