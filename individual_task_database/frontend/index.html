@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -7,6 +8,7 @@
     table, th, td { border: 1px solid black; border-collapse: collapse; padding: 5px; }
     input, select { margin: 5px; }
   </style>
+  <script src="script.js" defer></script>
 </head>
 <body>
 <h2>Driver Table</h2>
@@ -16,6 +18,8 @@
   <a href="import.html">Импорт/Экспорт</a>
 </nav>
 <br>
+<label>Name: <input id="filterName"></label>
+<label>Comment: <input id="filterComment"></label>
 <label>Category: <input id="filterCategory"></label>
 <label>Experience From: <input id="filterExperienceMin" type="number"></label>
 <label>To: <input id="filterExperienceMax" type="number"></label>
@@ -26,42 +30,75 @@
     <option value="false">No</option>
   </select>
 </label>
-<button onclick="fetchDrivers()">Filter</button>
-<table id="driversTable">
+<button onclick="fetchDrivers()">Filter </button>
+<a href="form.html"><button>Add Driver</button></a>
+
+<table border="1" cellpadding="5" cellspacing="0">
   <thead>
     <tr>
-      <th>Name</th><th>Categories</th><th>Experience</th><th>Available</th><th>Comments</th>
+      <th>Name</th>
+      <th>Categories</th>
+      <th>Experience</th>
+      <th>Available</th>
+      <th>Comments</th>
+      <th>Date of Birth</th>
+      <th>Created</th>
+      <th>Updated</th>
+      <th>Actions</th>
     </tr>
   </thead>
-  <tbody></tbody>
+  <tbody id="driver-table-body"></tbody>
 </table>
+
 <script>
   const apiUrl = 'http://localhost:8000';
   async function fetchDrivers() {
+    const name = document.getElementById('filterName').value;
+    const comment = document.getElementById('filterComment').value;
     const category = document.getElementById("filterCategory").value;
     const min = document.getElementById("filterExperienceMin").value;
     const max = document.getElementById("filterExperienceMax").value;
     const available = document.getElementById("filterAvailable").value;
     const params = new URLSearchParams();
+    if (name) params.append("name", name);
+    if (comment) params.append("comment", comment);
     if (category) params.append("category", category);
     if (min) params.append("min_experience", min);
     if (max) params.append("max_experience", max);
     if (available !== '') params.append("is_available", available);
     const res = await fetch(`${apiUrl}/drivers?${params}`);
     const data = await res.json();
-    const tbody = document.querySelector("#driversTable tbody");
+    const tbody = document.getElementById("driver-table-body");
     tbody.innerHTML = "";
     data.forEach(d => {
       tbody.innerHTML += `<tr>
         <td>${d.name}</td>
         <td>${d.license_categories.join(', ')}</td>
         <td>${d.experience_years}</td>
-        <td>${d.is_available}</td>
+        <td>${d.is_available ? 'Yes' : 'No'}</td>
         <td>${d.comments || ''}</td>
+        <td>${d.date_of_birth || ''}</td>
+        <td>${d.created_at ? new Date(d.created_at).toLocaleString() : ''}</td>
+        <td>${d.updated_at ? new Date(d.updated_at).toLocaleString() : ''}</td>
+
+        <td>
+            <button onclick="editDriver('${d.name}')">Edit</button>
+            <button onclick="deleteDriver('${d.name}')">Delete</button>
+          </td>
       </tr>`;
     });
+
+  }
+  function editDriver(name) {
+    window.location.href = `form.html?edit=${encodeURIComponent(name)}`;
+  }
+
+  async function deleteDriver(name) {
+    await fetch(`${apiUrl}/drivers/${encodeURIComponent(name)}`, { method: 'DELETE' });
+    fetchDrivers();
   }
   fetchDrivers();
 </script>
+
 </body>
 </html>

@@ -70,7 +70,7 @@ async function submitDriver(event) {
     body: JSON.stringify(driver)
   });
 
-  window.location.href = 'index.html';
+  window.location.href = 'table.html';
 }
 
 async function exportDrivers() {
