@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <title>Добавить / Редактировать Водителя</title>
+  <style>
+    body { font-family: Arial, sans-serif; max-width: 600px; margin: 20px auto; }
+    label { display: block; margin-top: 10px; }
+    input, select, textarea { width: 100%; padding: 8px; margin-top: 4px; box-sizing: border-box; }
+    button { margin-top: 15px; margin-right: 10px; padding: 8px 15px; cursor: pointer; }
+  </style>
+</head>
+<body>
+  <nav style="margin-bottom:20px;">
+    <a href="index.html" style="margin-right:15px;">Таблица</a>
+    <a href="form.html" style="margin-right:15px; font-weight: bold;">Добавить/Редактировать</a>
+    <a href="import.html">Импорт/Экспорт</a>
+  </nav>
+  <h2>Добавить / Редактировать Водителя</h2>
+
+  <label for="name">Имя водителя</label>
+  <input id="name" placeholder="Иванов И.И." />
+  <label>Date of Birth: <input type="date" id="date_of_birth"></label><br>
+  <input type="hidden" id="created_at_hidden"><br>
+
+  <label for="categories">Категории лицензий (через запятую)</label>
+  <input id="categories" placeholder="B, C" />
+
+  <label for="experience">Опыт (лет)</label>
+  <input id="experience" type="number" min="0" placeholder="5" />
+
+  <label for="available">Доступность</label>
+  <select id="available">
+    <option value="true">Доступен</option>
+    <option value="false">Недоступен</option>
+  </select>
+
+  <label for="comments">Комментарии</label>
+  <textarea id="comments" placeholder="Работает по выходным"></textarea>
+
+  <div>
+    <button type="button" onclick="submitDriver()">Добавить / Обновить</button>
+    <button type="button" onclick="clearForm()">Очистить</button>
+  </div>
+
+  <script>
+    const apiUrl = 'http://localhost:8000';
+    const params = new URLSearchParams(window.location.search);
+    const editName = params.get("edit");
+
+    if (editName) {
+      fetch(`${apiUrl}/drivers`)
+        .then(res => res.json())
+        .then(drivers => {
+          const driver = drivers.find(d => d.name === editName);
+          if (driver) {
+            document.getElementById("name").value = driver.name;
+            document.getElementById("date_of_birth").value = driver.date_of_birth || "";
+            document.getElementById("created_at_hidden").value = driver.created_at || "";
+            document.getElementById("categories").value = driver.license_categories.join(", ");
+            document.getElementById("experience").value = driver.experience_years;
+            document.getElementById("available").value = driver.is_available.toString();
+            document.getElementById("comments").value = driver.comments || '';
+          } else {
+            alert("Водитель не найден");
+          }
+        })
+        .catch(err => {
+          console.error("Ошибка при загрузке водителей:", err);
+        });
+    }
+
+    async function submitDriver() {
+      const driver = {
+        name: document.getElementById("name").value,
+        license_categories: document.getElementById("categories").value.split(',').map(c => c.trim()),
+        experience_years: parseInt(document.getElementById("experience").value),
+        is_available: document.getElementById("available").value === "true",
+        comments: document.getElementById("comments").value,
+        date_of_birth: document.getElementById("date_of_birth").value,
+        created_at: document.getElementById("created_at_hidden").value || null
+      };
+
+      if (!driver.name) {
+        alert("Введите имя водителя");
+        return;
+      }
+      if (isNaN(driver.experience_years)) {
+        alert("Введите корректный опыт работы");
+        return;
+      }
+
+      const resPut = await fetch(`${apiUrl}/drivers/${encodeURIComponent(driver.name)}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(driver)
+      });
+
+      if (resPut.ok) {
+        alert('Водитель добавлен или обновлен');
+        clearForm();
+        return;
+      } else if (resPut.status === 404) {
+        const resPost = await fetch(`${apiUrl}/drivers`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(driver)
+        });
+        if (resPost.ok) {
+          alert('Водитель добавлен');
+          clearForm();
+        } else {
+          alert('Ошибка при добавлении водителя');
+        }
+      } else {
+        alert('Ошибка при сохранении водителя');
+      }
+    }
+
+    function clearForm() {
+      document.getElementById("name").value = '';
+      document.getElementById("categories").value = '';
+      document.getElementById("experience").value = '';
+      document.getElementById("available").value = 'true';
+      document.getElementById("comments").value = '';
+      document.getElementById("date_of_birth").value = '';
+    }
+  </script>
+</body>
+</html>
+
+
