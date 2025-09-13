@@ -35,7 +35,7 @@
   </table>
 
   <script>
-    const apiUrl = "http://127.0.0.1:8000"; // обязательно полный адрес к backend
+    const apiUrl = "http://127.0.0.1:8000";
     const tbody = document.querySelector("#carsTable tbody");
 
     async function loadCars(params = null) {
@@ -73,7 +73,6 @@
             <button onclick="event.stopPropagation(); deleteCar('${encodeURIComponent(c.license_plate)}')">Удалить</button>
           </td>
         `;
-        // клик по строке — редактировать
         row.addEventListener("click", () => {
           window.location.href = `form.html?edit=${encodeURIComponent(c.license_plate)}`;
         });
@@ -99,7 +98,7 @@
       if (filterName.value) p.append("name", filterName.value);
       if (filterModel.value) p.append("model", filterModel.value);
       if (filterCategory.value) p.append("category", filterCategory.value);
-      if (filterPlate.value) p.append("license_plate", filterPlate.value); // <-- важно: license_plate
+      if (filterPlate.value) p.append("license_plate", filterPlate.value);
       if (filterMinYear.value) p.append("min_year", filterMinYear.value);
       if (filterMaxYear.value) p.append("max_year", filterMaxYear.value);
       return p.toString();
@@ -119,8 +118,8 @@
       return String(s).replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[ch]);
     }
 
-    // загрузить при старте
     loadCars();
   </script>
 </body>
 </html>
+
