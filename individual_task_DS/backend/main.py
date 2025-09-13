@@ -80,7 +80,6 @@ async def update_car(license_plate: str, car: Car):
     car.created_at = existing.get("created_at")
     car.updated_at = datetime.utcnow() + timedelta(hours=3)
 
-    # Важно: если пользователь поменял license_plate, нужно обновить его
     result = await car_collection.update_one(
         {"license_plate": license_plate},
         {"$set": car.dict()}
@@ -104,7 +103,6 @@ async def service_search(query: str):
         {"service_history.date": regex},
     ]
 
-    # Пробуем интерпретировать запрос как число
     try:
         num_query = float(query)
         search_conditions.append({"service_history.mileage": num_query})
@@ -124,7 +122,7 @@ async def service_search(query: str):
 async def export_cars():
     cars = await car_collection.find().to_list(100)
     for c in cars:
-        c.pop("_id", None)  # Убираем ObjectId, чтобы JSON был корректным
+        c.pop("_id", None) 
     return cars
 
 @app.post("/cars/import")
@@ -149,4 +147,5 @@ async def get_car(license_plate: str):
     if not car:
         raise HTTPException(status_code=404, detail="Car not found")
     car.pop("_id", None)
+
     return car
