@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head><meta charset="utf-8"/><title>Поиск по ТО</title></head>
+<body>
+  <h1>Поиск по истории ТО</h1>
+  <div>
+    <label>Что искать: <input type="text" id="query" placeholder="например: масло, насос, 2023"></label>
+    <button id="btnSearch">Искать</button>
+  </div>
+  <p><a href="index.html">Назад</a></p>
+
+  <div id="results"></div>
+
+  <script>
+    const apiUrl = "http://127.0.0.1:8000";
+    const resultsDiv = document.getElementById("results");
+
+    document.getElementById("btnSearch").addEventListener("click", searchService);
+    document.getElementById("query").addEventListener("keydown", (e) => {
+      if (e.key === "Enter") searchService();
+    });
+
+    async function searchService() {
+      const q = document.getElementById("query").value.trim();
+      if (!q) {
+        resultsDiv.innerHTML = "<p>Введите запрос для поиска.</p>";
+        return;
+      }
+
+      resultsDiv.innerHTML = "<p>Идёт поиск...</p>";
+      try {
+        const res = await fetch(`${apiUrl}/service_search?query=${encodeURIComponent(q)}`);
+        if (!res.ok) throw new Error(`${res.status} ${res.statusText}`);
+        const data = await res.json();
+        renderResults(data, q);
+      } catch (err) {
+        console.error("Ошибка поиска по ТО:", err);
+        resultsDiv.innerHTML = "<p>Ошибка при поиске (см. консоль).</p>";
+      }
+    }
+
+    function renderResults(cars, q) {
+      if (!cars || cars.length === 0) {
+        resultsDiv.innerHTML = "<p>Ничего не найдено.</p>";
+        return;
+      }
+      resultsDiv.innerHTML = "";
+      cars.forEach(car => {
+        const eps = (car.service_history || []).filter(ep => {
+        const hay = [
+            ep.description || "",
+            (ep.replaced_parts || []).join(" "),
+            ep.date || "",
+            ep.mileage ? String(ep.mileage) : "",
+            ep.cost ? String(ep.cost) : ""
+          ].join(" ").toLowerCase();
+          return hay.includes(q.toLowerCase());
+        });
+        if (eps.length === 0) return;
+        let html = `<h3>${escapeHtml(car.name)} (${escapeHtml(car.license_plate)})</h3>`;
+        html += `<table border="1"><tr><th>Дата</th><th>Описание</th><th>Детали</th><th>Пробег</th><th>Стоимость</th></tr>`;
+        eps.forEach(ep => {
+          html += `<tr>
+            <td>${escapeHtml(ep.date || "")}</td>
+            <td>${escapeHtml(ep.description || "")}</td>
+            <td>${escapeHtml((ep.replaced_parts || []).join(", "))}</td>
+            <td>${escapeHtml(ep.mileage || "")}</td>
+            <td>${escapeHtml(ep.cost || "")}</td>
+          </tr>`;
+        });
+        html += `</table>`;
+        resultsDiv.innerHTML += html;
+      });
+    }
+
+    function escapeHtml(s) {
+      if (!s && s !== 0) return "";
+      return String(s).replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[ch]);
+    }
+  </script>
+</body>
+</html>
