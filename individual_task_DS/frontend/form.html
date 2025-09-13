@@ -69,7 +69,6 @@
         return;
       }
 
-      // PUT по license_plate
       const resPut = await fetch(`${apiUrl}/cars/${encodeURIComponent(car.license_plate)}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
@@ -81,7 +80,6 @@
         clearForm();
         return;
       } else if (resPut.status === 404) {
-        // Если машина не найдена — создаём новую
         const resPost = await fetch(`${apiUrl}/cars`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -101,3 +99,4 @@
   </script>
 </body>
 </html>
+
