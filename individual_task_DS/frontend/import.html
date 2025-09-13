@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <title>Импорт / Экспорт автомобилей</title>
+</head>
+<body>
+  <h1>Импорт / Экспорт</h1>
+  <button onclick="exportCars()">Экспорт</button>
+  <textarea id="dataArea" rows="15" cols="60"></textarea><br>
+  <button onclick="importCars()">Импорт</button>
+  <p><a href="index.html">Назад</a></p>
+
+  <script>
+    const apiUrl = "http://localhost:8000";
+
+    async function exportCars() {
+      const res = await fetch(`${apiUrl}/cars/export`);
+      const data = await res.json();
+      document.getElementById("dataArea").value = JSON.stringify(data, null, 2);
+    }
+
+    async function importCars() {
+      try {
+        const data = JSON.parse(document.getElementById("dataArea").value);
+        const res = await fetch(`${apiUrl}/cars/import`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(data)
+        });
+        if (res.ok) alert("Импорт завершён");
+        else alert("Ошибка импорта");
+      } catch (e) {
+        alert("Некорректный JSON");
+      }
+    }
+  </script>
+</body>
+</html>
