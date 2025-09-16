@@ -10,17 +10,17 @@ initial_cars = [
         category="Грузовой",
         year=2015,
         service_history=[
-            ServiceEpisode(date="2023-01-10",
+            ServiceEpisode(date="2025-01-10",
                            description="Плановое ТО, замена масла",
                            replaced_parts=["Масло", "Фильтр"],
-                           mileage = 120000,
+                           mileage = 90000,
                            cost = 4000
                            ).dict(),
-            ServiceEpisode(date="2023-06-20",
+            ServiceEpisode(date="2025-06-20",
                            description="Ремонт тормозов",
                            replaced_parts=["Тормозные колодки"],
-                           mileage = 120000,
-                           cost = 4000
+                           mileage = 95000,
+                           cost = 20000
                            ).dict()
         ],
         created_at=datetime.utcnow() + timedelta(hours=3),
@@ -33,11 +33,11 @@ initial_cars = [
         category="Строительная",
         year=2018,
         service_history=[
-            ServiceEpisode(date="2023-12-01",
+            ServiceEpisode(date="2025-12-01",
                            description="Замена гидравлического насоса",
                            replaced_parts=["Насос"],
-                           mileage = 120000,
-                           cost = 4000
+                           mileage = 50000,
+                           cost = 8000
                            ).dict()
         ],
         created_at=datetime.utcnow() + timedelta(hours=3),

@@ -14,6 +14,10 @@
     <label>Госномер: <input type="text" id="filterPlate"></label>
     <label>Год от: <input type="number" id="filterMinYear"></label>
     <label>Год до: <input type="number" id="filterMaxYear"></label>
+    <label>Создан от: <input type="datetime-local" id="created_from"></label>
+    <label>Создан до: <input type="datetime-local" id="created_to"></label>
+    <label>Обновлен от: <input type="datetime-local" id="updated_from"></label>
+    <label>Обновлен до: <input type="datetime-local" id="updated_to"></label>
     <button id="btnFilter">Фильтровать</button>
     <button id="btnClear">Очистить</button>
   </div>
@@ -102,6 +106,10 @@
       if (filterPlate.value) p.append("license_plate", filterPlate.value);
       if (filterMinYear.value) p.append("min_year", filterMinYear.value);
       if (filterMaxYear.value) p.append("max_year", filterMaxYear.value);
+      if (created_from.value) p.append("created_from", created_from.value);
+      if (created_to.value) p.append("created_to", created_to.value);
+      if (updated_from.value) p.append("updated_from", updated_from.value);
+      if (updated_to.value) p.append("updated_to", updated_to.value);
       return p.toString();
     }
 
@@ -111,6 +119,11 @@
     });
     document.getElementById("btnClear").addEventListener("click", () => {
       filterName.value = filterModel.value = filterCategory.value = filterPlate.value = filterMinYear.value = filterMaxYear.value = "";
+      created_from.value = "";
+      created_from.value = "";
+      created_to.value = "";
+      update_from.value = "";
+      update_to.value = "";
       loadCars();
     });
 

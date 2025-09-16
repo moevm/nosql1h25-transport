@@ -1,12 +1,21 @@
 <!DOCTYPE html>
 <html lang="ru">
-<head><meta charset="utf-8"/><title>Поиск по ТО</title></head>
+<head>
+  <meta charset="utf-8"/>
+  <title>Поиск по ТО</title>
+</head>
 <body>
-  <h1>Поиск по истории ТО</h1>
-  <div>
-    <label>Что искать: <input type="text" id="query" placeholder="например: масло, насос, 2023"></label>
-    <button id="btnSearch">Искать</button>
-  </div>
+  <h2>Фильтр по истории ТО</h2>
+  <label>Описание: <input type="text" id="desc"></label>
+  <label>Запчасть: <input type="text" id="part"></label>
+  <label>Дата от: <input type="date" id="min_date"></label>
+  <label>Дата до: <input type="date" id="max_date"></label>
+  <label>Пробег от: <input type="number" id="min_mileage"></label>
+  <label>Пробег до: <input type="number" id="max_mileage"></label>
+  <label>Стоимость от: <input type="number" id="min_cost"></label>
+  <label>Стоимость до: <input type="number" id="max_cost"></label>
+  <button id="btnSearch">Искать</button>
+  <button id="btnClear">Очистить</button>
   <p><a href="index.html">Назад</a></p>
 
   <div id="results"></div>
@@ -16,27 +25,23 @@
     const resultsDiv = document.getElementById("results");
 
     document.getElementById("btnSearch").addEventListener("click", searchService);
-    document.getElementById("query").addEventListener("keydown", (e) => {
-      if (e.key === "Enter") searchService();
-    });
+    document.getElementById("btnClear").addEventListener("click", clearFilters);
 
     async function searchService() {
-      const q = document.getElementById("query").value.trim();
-      if (!q) {
-        resultsDiv.innerHTML = "<p>Введите запрос для поиска.</p>";
-        return;
-      }
+      let params = {};
+      if (desc.value) params.description = desc.value;
+      if (part.value) params.replaced_part = part.value;
+      if (min_date.value) params.min_date = min_date.value;
+      if (max_date.value) params.max_date = max_date.value;
+      if (min_mileage.value) params.min_mileage = Number(min_mileage.value);
+      if (max_mileage.value) params.max_mileage = Number(max_mileage.value);
+      if (min_cost.value) params.min_cost = Number(min_cost.value);
+      if (max_cost.value) params.max_cost = Number(max_cost.value);
 
-      resultsDiv.innerHTML = "<p>Идёт поиск...</p>";
-      try {
-        const res = await fetch(`${apiUrl}/service_search?query=${encodeURIComponent(q)}`);
-        if (!res.ok) throw new Error(`${res.status} ${res.statusText}`);
-        const data = await res.json();
-        renderResults(data, q);
-      } catch (err) {
-        console.error("Ошибка поиска по ТО:", err);
-        resultsDiv.innerHTML = "<p>Ошибка при поиске (см. консоль).</p>";
-      }
+      let url = `${apiUrl}/service_search?` + new URLSearchParams(params);
+      const res = await fetch(url);
+      const cars = await res.json();
+      renderResults(cars, params);
     }
 
     function renderResults(cars, q) {
@@ -47,16 +52,22 @@
       resultsDiv.innerHTML = "";
       cars.forEach(car => {
         const eps = (car.service_history || []).filter(ep => {
-        const hay = [
-            ep.description || "",
-            (ep.replaced_parts || []).join(" "),
-            ep.date || "",
-            ep.mileage ? String(ep.mileage) : "",
-            ep.cost ? String(ep.cost) : ""
-          ].join(" ").toLowerCase();
-          return hay.includes(q.toLowerCase());
+          if (q.description && !(ep.description || "").toLowerCase().includes(q.description.toLowerCase())) return false;
+          if (q.replaced_part && !(ep.replaced_parts || []).join(" ").toLowerCase().includes(q.replaced_part.toLowerCase())) return false;
+          if (q.min_date || q.max_date) {
+            const epDate = ep.date ? new Date(ep.date) : null;
+            if (!epDate) return false;
+            if (q.min_date && epDate < new Date(q.min_date)) return false;
+            if (q.max_date && epDate > new Date(q.max_date)) return false;
+          }
+          if (q.min_mileage && (!ep.mileage || ep.mileage < q.min_mileage)) return false;
+          if (q.max_mileage && (!ep.mileage || ep.mileage > q.max_mileage)) return false;
+          if (q.min_cost && (!ep.cost || ep.cost < q.min_cost)) return false;
+          if (q.max_cost && (!ep.cost || ep.cost > q.max_cost)) return false;
+          return true;
         });
         if (eps.length === 0) return;
+
         let html = `<h3>${escapeHtml(car.name)} (${escapeHtml(car.license_plate)})</h3>`;
         html += `<table border="1"><tr><th>Дата</th><th>Описание</th><th>Детали</th><th>Пробег</th><th>Стоимость</th></tr>`;
         eps.forEach(ep => {
@@ -73,9 +84,23 @@
       });
     }
 
+    function clearFilters() {
+      desc.value = "";
+      part.value = "";
+      min_date.value = "";
+      max_date.value = "";
+      min_mileage.value = "";
+      max_mileage.value = "";
+      min_cost.value = "";
+      max_cost.value = "";
+      resultsDiv.innerHTML = "";
+    }
+
     function escapeHtml(s) {
       if (!s && s !== 0) return "";
-      return String(s).replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[ch]);
+      return String(s).replace(/[&<>"']/g, ch => ({
+        '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
+      })[ch]);
     }
   </script>
 </body>

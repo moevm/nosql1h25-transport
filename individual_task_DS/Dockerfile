@@ -3,7 +3,7 @@ FROM python:3.11-slim
 WORKDIR /app
 
 COPY backend/ .
-
-RUN pip install --no-cache-dir fastapi motor uvicorn pydantic
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
 
 CMD ["sh", "-c", "python seed.py && uvicorn main:app --host 0.0.0.0 --port 8000"]

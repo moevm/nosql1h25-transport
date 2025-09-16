@@ -2,7 +2,7 @@ from fastapi import FastAPI, HTTPException, Query, Body
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from typing import List, Optional, Any
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, time
 import motor.motor_asyncio
 
 app = FastAPI()
@@ -39,29 +39,44 @@ class Car(BaseModel):
 
 @app.get("/cars", response_model=List[Car])
 async def get_cars(
-    name: Optional[str] = Query(None),
-    model: Optional[str] = Query(None),
+    name: Optional[str] = None,
+    model: Optional[str] = None,
+    license_plate: Optional[str] = None,
     category: Optional[str] = Query(None),
-    license_plate: Optional[str] = Query(None),
-    min_year: Optional[int] = Query(None),
-    max_year: Optional[int] = Query(None)
+    min_year: Optional[int] = None,
+    max_year: Optional[int] = None,
+    created_from: Optional[str] = None,
+    created_to: Optional[str] = None,
+    updated_from: Optional[str] = None,
+    updated_to: Optional[str] = None
 ):
     query = {}
     if name:
         query["name"] = {"$regex": name, "$options": "i"}
     if model:
         query["model"] = {"$regex": model, "$options": "i"}
-    if category:
-        query["category"] = {"$regex": category, "$options": "i"}
     if license_plate:
         query["license_plate"] = {"$regex": license_plate, "$options": "i"}
+    if category:
+        query["category"] = {"$regex": category, "$options": "i"}
     if min_year or max_year:
         query["year"] = {}
-        if min_year:
-            query["year"]["$gte"] = min_year
-        if max_year:
-            query["year"]["$lte"] = max_year
-    cars = await car_collection.find(query).to_list(100)
+        if min_year: query["year"]["$gte"] = min_year
+        if max_year: query["year"]["$lte"] = max_year
+    if created_from or created_to:
+        query["created_at"] = {}
+        if created_from: query["created_at"]["$gte"] = datetime.fromisoformat(
+            created_from)
+        if created_to: query["created_at"]["$lte"] = datetime.fromisoformat(created_to)
+    if updated_from or updated_to:
+        query["updated_at"] = {}
+        if updated_from: query["updated_at"]["$gte"] = datetime.fromisoformat(
+            updated_from)
+        if updated_to: query["updated_at"]["$lte"] = datetime.fromisoformat(updated_to)
+
+    cars = await car_collection.find(query).to_list(200)
+    for c in cars:
+        c.pop("_id", None)
     return cars
 
 @app.post("/cars")
@@ -94,27 +109,44 @@ async def delete_car(license_plate: str):
     return {"message": "Car deleted"}
 
 @app.get("/service_search")
-async def service_search(query: str):
-    regex = {"$regex": query, "$options": "i"}
+async def service_search(
+    description: Optional[str] = None,
+    replaced_part: Optional[str] = None,
+    date_from: Optional[str] = None,
+    date_to: Optional[str] = None,
+    min_mileage: Optional[int] = None,
+    max_mileage: Optional[int] = None,
+    min_cost: Optional[float] = None,
+    max_cost: Optional[float] = None
+):
+    elem_conditions = {}
 
-    search_conditions = [
-        {"service_history.description": regex},
-        {"service_history.replaced_parts": regex},
-        {"service_history.date": regex},
-    ]
+    if description:
+        elem_conditions["description"] = {"$regex": description, "$options": "i"}
+    if replaced_part:
+        elem_conditions["replaced_parts"] = {"$regex": replaced_part, "$options": "i"}
+    # если даты в БД — строки 'YYYY-MM-DD', то:
+    if date_from or date_to:
+        cond = {}
+        if date_from: cond["$gte"] = date_from
+        if date_to:   cond["$lte"] = date_to
+        elem_conditions["date"] = cond
+    if min_mileage or max_mileage:
+        cond = {}
+        if min_mileage: cond["$gte"] = min_mileage
+        if max_mileage: cond["$lte"] = max_mileage
+        elem_conditions["mileage"] = cond
+    if min_cost or max_cost:
+        cond = {}
+        if min_cost: cond["$gte"] = min_cost
+        if max_cost: cond["$lte"] = max_cost
+        elem_conditions["cost"] = cond
 
-    try:
-        num_query = float(query)
-        search_conditions.append({"service_history.mileage": num_query})
-        search_conditions.append({"service_history.cost": num_query})
-    except ValueError:
-        pass
+    query = {"service_history": {"$elemMatch": elem_conditions}} if elem_conditions else {}
 
-    cars = await car_collection.find({"$or": search_conditions}).to_list(200)
-
-    for car in cars:
-        car.pop("_id", None)
-
+    cars = await car_collection.find(query).to_list(200)
+    for c in cars:
+        c.pop("_id", None)
     return cars
 
 
