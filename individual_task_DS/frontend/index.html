@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8"/>
+  <title>Список автомобилей</title>
+</head>
+<body>
+  <h1>Автомобили</h1>
+
+  <div>
+    <label>Название: <input type="text" id="filterName"></label>
+    <label>Модель: <input type="text" id="filterModel"></label>
+    <label>Категория: <input type="text" id="filterCategory"></label>
+    <label>Госномер: <input type="text" id="filterPlate"></label>
+    <label>Год от: <input type="number" id="filterMinYear"></label>
+    <label>Год до: <input type="number" id="filterMaxYear"></label>
+    <label>Создан от: <input type="datetime-local" id="created_from"></label>
+    <label>Создан до: <input type="datetime-local" id="created_to"></label>
+    <label>Обновлен от: <input type="datetime-local" id="updated_from"></label>
+    <label>Обновлен до: <input type="datetime-local" id="updated_to"></label>
+    <button id="btnFilter">Фильтровать</button>
+    <button id="btnClear">Очистить</button>
+  </div>
+
+  <p>
+    <a href="form.html">Добавить автомобиль</a> |
+    <a href="service_search.html">Поиск по ТО</a> |
+    <a href="import.html">Импорт / Экспорт</a>
+  </p>
+
+  <table border="1" id="carsTable">
+    <thead>
+      <tr>
+        <th>Название</th><th>Модель</th><th>Госномер</th><th>Категория</th><th>Год</th>
+        <th>Создан</th><th>Обновлён</th><th>Действия</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+
+  <script>
+    const apiUrl = "http://127.0.0.1:8000";
+    const tbody = document.querySelector("#carsTable tbody");
+
+    async function loadCars(params = null) {
+      try {
+        const url = params ? `${apiUrl}/cars?${params}` : `${apiUrl}/cars`;
+        const res = await fetch(url);
+        if (!res.ok) throw new Error(`${res.status} ${res.statusText}`);
+        const data = await res.json();
+        renderTable(data);
+      } catch (err) {
+        console.error("Ошибка загрузки машин:", err);
+        alert("Ошибка при загрузке данных. Проверь консоль.");
+      }
+    }
+
+    function renderTable(data) {
+      tbody.innerHTML = "";
+      if (!Array.isArray(data) || data.length === 0) {
+        tbody.innerHTML = "<tr><td colspan='8'>Нет данных</td></tr>";
+        return;
+      }
+      data.forEach(c => {
+        const row = document.createElement("tr");
+        row.style.cursor = "pointer";
+        row.innerHTML = `
+          <td>${escapeHtml(c.name)}</td>
+          <td>${escapeHtml(c.model)}</td>
+          <td>${escapeHtml(c.license_plate)}</td>
+          <td>${escapeHtml(c.category || "")}</td>
+          <td>${c.year || ""}</td>
+          <td>${c.created_at ? new Date(c.created_at).toLocaleString() : ""}</td>
+          <td>${c.updated_at ? new Date(c.updated_at).toLocaleString() : ""}</td>
+          <td>
+            <a href="form.html?edit=${encodeURIComponent(c.license_plate)}" onclick="event.stopPropagation()">Редактировать</a>
+            <button onclick="event.stopPropagation(); deleteCar('${encodeURIComponent(c.license_plate)}')">Удалить</button>
+          </td>
+        `;
+
+        row.addEventListener("click", () => {
+          window.location.href = `form.html?edit=${encodeURIComponent(c.license_plate)}`;
+        });
+        tbody.appendChild(row);
+      });
+    }
+
+    async function deleteCar(encodedPlate) {
+      const plate = decodeURIComponent(encodedPlate);
+      if (!confirm(`Удалить машину ${plate}?`)) return;
+      try {
+        const res = await fetch(`${apiUrl}/cars/${encodeURIComponent(plate)}`, { method: "DELETE" });
+        if (!res.ok) throw new Error("Не удалось удалить");
+        loadCars();
+      } catch (err) {
+        console.error("Ошибка удаления:", err);
+        alert("Ошибка при удалении (см. консоль).");
+      }
+    }
+
+    function buildParamsFromFilters() {
+      const p = new URLSearchParams();
+      if (filterName.value) p.append("name", filterName.value);
+      if (filterModel.value) p.append("model", filterModel.value);
+      if (filterCategory.value) p.append("category", filterCategory.value);
+      if (filterPlate.value) p.append("license_plate", filterPlate.value);
+      if (filterMinYear.value) p.append("min_year", filterMinYear.value);
+      if (filterMaxYear.value) p.append("max_year", filterMaxYear.value);
+      if (created_from.value) p.append("created_from", created_from.value);
+      if (created_to.value) p.append("created_to", created_to.value);
+      if (updated_from.value) p.append("updated_from", updated_from.value);
+      if (updated_to.value) p.append("updated_to", updated_to.value);
+      return p.toString();
+    }
+
+    document.getElementById("btnFilter").addEventListener("click", () => {
+      const params = buildParamsFromFilters();
+      loadCars(params);
+    });
+    document.getElementById("btnClear").addEventListener("click", () => {
+      filterName.value = filterModel.value = filterCategory.value = filterPlate.value = filterMinYear.value = filterMaxYear.value = "";
+      created_from.value = "";
+      created_from.value = "";
+      created_to.value = "";
+      update_from.value = "";
+      update_to.value = "";
+      loadCars();
+    });
+
+    function escapeHtml(s) {
+      if (!s && s !== 0) return "";
+      return String(s).replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[ch]);
+    }
+
+    loadCars();
+  </script>
+</body>
+</html>
