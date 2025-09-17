@@ -112,39 +112,44 @@ async def delete_car(license_plate: str):
 async def service_search(
     description: Optional[str] = None,
     replaced_part: Optional[str] = None,
-    date_from: Optional[str] = None,
-    date_to: Optional[str] = None,
+    min_date: Optional[str] = None,
+    max_date: Optional[str] = None,
     min_mileage: Optional[int] = None,
     max_mileage: Optional[int] = None,
     min_cost: Optional[float] = None,
     max_cost: Optional[float] = None
 ):
-    elem_conditions = {}
+    cond = {}
 
     if description:
-        elem_conditions["description"] = {"$regex": description, "$options": "i"}
+        cond["description"] = {"$regex": description, "$options": "i"}
     if replaced_part:
-        elem_conditions["replaced_parts"] = {"$regex": replaced_part, "$options": "i"}
-    # если даты в БД — строки 'YYYY-MM-DD', то:
-    if date_from or date_to:
-        cond = {}
-        if date_from: cond["$gte"] = date_from
-        if date_to:   cond["$lte"] = date_to
-        elem_conditions["date"] = cond
+        cond["replaced_parts"] = {"$elemMatch": {"$regex": replaced_part, "$options": "i"}}
+    if min_date or max_date:
+        cond["date"] = {}
+        if min_date:
+            cond["date"]["$gte"] = datetime.fromisoformat(min_date)
+        if max_date:
+            cond["date"]["$lte"] = datetime.fromisoformat(max_date)
     if min_mileage or max_mileage:
-        cond = {}
-        if min_mileage: cond["$gte"] = min_mileage
-        if max_mileage: cond["$lte"] = max_mileage
-        elem_conditions["mileage"] = cond
+        cond["mileage"] = {}
+        if min_mileage:
+            cond["mileage"]["$gte"] = min_mileage
+        if max_mileage:
+            cond["mileage"]["$lte"] = max_mileage
     if min_cost or max_cost:
-        cond = {}
-        if min_cost: cond["$gte"] = min_cost
-        if max_cost: cond["$lte"] = max_cost
-        elem_conditions["cost"] = cond
+        cond["cost"] = {}
+        if min_cost:
+            cond["cost"]["$gte"] = min_cost
+        if max_cost:
+            cond["cost"]["$lte"] = max_cost
 
-    query = {"service_history": {"$elemMatch": elem_conditions}} if elem_conditions else {}
+    query = {}
+    if cond:
+        query["service_history"] = {"$elemMatch": cond}
 
     cars = await car_collection.find(query).to_list(200)
+
     for c in cars:
         c.pop("_id", None)
     return cars

@@ -14,8 +14,8 @@
   <label>Пробег до: <input type="number" id="max_mileage"></label>
   <label>Стоимость от: <input type="number" id="min_cost"></label>
   <label>Стоимость до: <input type="number" id="max_cost"></label>
-  <button id="btnSearch">Искать</button>
-  <button id="btnClear">Очистить</button>
+  <button onclick="searchService()">Искать</button>
+  <button onclick="clearFilters()">Очистить</button>
   <p><a href="index.html">Назад</a></p>
 
   <div id="results"></div>
@@ -38,39 +38,30 @@
       if (min_cost.value) params.min_cost = Number(min_cost.value);
       if (max_cost.value) params.max_cost = Number(max_cost.value);
 
-      let url = `${apiUrl}/service_search?` + new URLSearchParams(params);
-      const res = await fetch(url);
-      const cars = await res.json();
-      renderResults(cars, params);
+      const url = `${apiUrl}/service_search?` + new URLSearchParams(params);
+      try {
+        const res = await fetch(url);
+        const cars = await res.json();
+        renderResults(cars);
+      } catch (err) {
+        console.error("Ошибка при поиске ТО:", err);
+        resultsDiv.innerHTML = "<p>Ошибка загрузки данных</p>";
+      }
     }
 
-    function renderResults(cars, q) {
+    function renderResults(cars) {
       if (!cars || cars.length === 0) {
         resultsDiv.innerHTML = "<p>Ничего не найдено.</p>";
         return;
       }
       resultsDiv.innerHTML = "";
       cars.forEach(car => {
-        const eps = (car.service_history || []).filter(ep => {
-          if (q.description && !(ep.description || "").toLowerCase().includes(q.description.toLowerCase())) return false;
-          if (q.replaced_part && !(ep.replaced_parts || []).join(" ").toLowerCase().includes(q.replaced_part.toLowerCase())) return false;
-          if (q.min_date || q.max_date) {
-            const epDate = ep.date ? new Date(ep.date) : null;
-            if (!epDate) return false;
-            if (q.min_date && epDate < new Date(q.min_date)) return false;
-            if (q.max_date && epDate > new Date(q.max_date)) return false;
-          }
-          if (q.min_mileage && (!ep.mileage || ep.mileage < q.min_mileage)) return false;
-          if (q.max_mileage && (!ep.mileage || ep.mileage > q.max_mileage)) return false;
-          if (q.min_cost && (!ep.cost || ep.cost < q.min_cost)) return false;
-          if (q.max_cost && (!ep.cost || ep.cost > q.max_cost)) return false;
-          return true;
-        });
-        if (eps.length === 0) return;
+        if (!car.service_history || car.service_history.length === 0) return;
 
         let html = `<h3>${escapeHtml(car.name)} (${escapeHtml(car.license_plate)})</h3>`;
-        html += `<table border="1"><tr><th>Дата</th><th>Описание</th><th>Детали</th><th>Пробег</th><th>Стоимость</th></tr>`;
-        eps.forEach(ep => {
+        html += `<table border="1">
+          <tr><th>Дата</th><th>Описание</th><th>Детали</th><th>Пробег</th><th>Стоимость</th></tr>`;
+        car.service_history.forEach(ep => {
           html += `<tr>
             <td>${escapeHtml(ep.date || "")}</td>
             <td>${escapeHtml(ep.description || "")}</td>
