@@ -16,12 +16,12 @@
     <a href="customer_import.html">Импорт/Экспорт базы клиентов</a>
 </nav>
 <br>
-<button onclick="exportDrivers()">Export</button>
+<button onclick="exportCustomers()">Export</button>
 <input type="file" id="importFile">
-<button onclick="importDrivers()">Import</button>
+<button onclick="importCustomers()">Import</button>
 <script>
   const apiUrl = 'http://localhost:8000';
-  async function exportDrivers() {
+  async function exportCustomers() {
     const res = await fetch(`${apiUrl}/customers/export`);
     const data = await res.json();
     const blob = new Blob([JSON.stringify(data, null, 2)], {type: 'application/json'});
@@ -31,7 +31,7 @@
     a.download = 'customers.json';
     a.click();
   }
-  async function importDrivers() {
+  async function importCustomers() {
     const file = document.getElementById("importFile").files[0];
     const text = await file.text();
     const data = JSON.parse(text);
