@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  
+  <style>
+    body { font-family: Arial, sans-serif; max-width: 600px; margin: 20px auto; }
+    label { display: block; margin-top: 10px; }
+    input, select, textarea { width: 100%; padding: 8px; margin-top: 4px; box-sizing: border-box; }
+    button { margin-top: 15px; margin-right: 10px; padding: 8px 15px; cursor: pointer; }
+  </style>
+</head>
+<body>
+  <nav>
+  <a href="index.html">Заказчики</a> |
+  <a href="tc.html">Техника в аренду</a> |
+  <a href="rent.html">Аренда</a>
+</nav>
+<nav>
+    <a href="customer_form.html">Добавить/Редактировать технику</a> |
+    <a href="customer_import.html">Импорт/Экспорт базы техники</a>
+</nav>
+<h2>Подробная информация о заказчике</h2>
+
+<div id="detailsContainer"></div>
+
+<script>
+  // Получение параметра registration_number из URL
+  function getQueryParam(param) {
+    const urlParams = new URLSearchParams(window.location.search);
+    return urlParams.get(param);
+  }
+
+  const Name_ = getQueryParam('name');
+
+  if (!Name_) {
+    document.getElementById('detailsContainer').innerHTML = '<p>Не указано фио.</p>';
+  } else {
+    // API-запрос для получения данных о технике
+    const apiUrl = 'http://localhost:8000/customers/' + encodeURIComponent(Name_);
+    fetch(apiUrl)
+      .then(response => {
+        if (!response.ok) {
+          throw new Error('Ошибка при получении данных');
+        }
+        return response.json();
+      })
+      .then(data => {
+        // Формируем таблицу с данными
+        const html = `
+          <table>
+            <tr><th>Логин</th><td>${data.login}</td></tr>
+            <tr><th>Пароль</th><td>${data.password}</td></tr>
+            <tr><th>Ф.И.О. заказчика</th><td>${data.name}</td></tr>
+            <tr><th>Контактная информация</th><td>${data.contact_information}</td></tr>
+            <tr><th>Адрес</th><td>${data.address}</td></tr>
+            <tr><th>Комментарии</th><td>${data.comments || ''}</td></tr>
+          </table>
+        `;
+        document.getElementById('detailsContainer').innerHTML = html;
+      })
+      .catch(err => {
+        document.getElementById('detailsContainer').innerHTML = '<p>Ошибка при получении данных о заказчике.</p>';
+        console.error(err);
+      });
+  }
+</script>
+</body>
+</html>
