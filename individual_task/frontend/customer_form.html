@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <title>Добавить / Редактировать Водителя</title>
+  <style>
+    body { font-family: Arial, sans-serif; max-width: 600px; margin: 20px auto; }
+    label { display: block; margin-top: 10px; }
+    input, select, textarea { width: 100%; padding: 8px; margin-top: 4px; box-sizing: border-box; }
+    button { margin-top: 15px; margin-right: 10px; padding: 8px 15px; cursor: pointer; }
+  </style>
+</head>
+<body>
+  <nav>
+  <a href="index.html">Заказчики</a> |
+  <a href="tc.html">Техника в аренду</a> |
+  <a href="rent.html">Аренда</a>
+</nav>
+<nav>
+    <a href="customer_form.html">Добавить/Редактировать заказчика</a> |
+    <a href="customer_import.html">Импорт/Экспорт базы заказчиков</a>
+</nav>
+  <h2>Добавить / Редактировать ТС</h2>
+
+  <label for="login">Логин</label>
+  <input id="login" placeholder="ivanov349" />
+
+  <label for="password">Пароль</label>
+  <input id="password" placeholder="8440jfirijr4" />
+
+  <label for="name">Ф.И.О. заказчика</label>
+  <input id="name" placeholder="Иванов Иван Иванович" />
+
+  <label for="contact_information">Контактная информация</label>
+  <input id="contact_information" placeholder="+7 921382984" />
+
+  <label for="address">Адрес</label>
+  <input id="address" placeholder="+7 921382984" />
+
+  <label for="available">Доступность</label>
+  <select id="available">
+    <option value="true">Доступен</option>
+    <option value="false">Недоступен</option>
+  </select>
+
+  <label for="comments">Комментарии</label>
+  <textarea id="comments" placeholder="Работает по выходным"></textarea>
+
+  <div>
+    <button type="button" onclick="submitCustomer()">Добавить / Обновить</button>
+    <button type="button" onclick="deleteCustomer()">Удалить</button>
+    <button type="button" onclick="clearForm()">Очистить</button>
+  </div>
+
+  <script>
+    const apiUrl = 'http://localhost:8000';
+
+    async function submitCustomer() {
+      const customer = {
+        login: document.getElementById("login").value.trim(),
+        password: document.getElementById("password").value.trim(),
+        name: document.getElementById("name").value.trim(),
+        contact_information: document.getElementById("contact_information").value.trim(),
+        address: document.getElementById("address").value.trim(),
+        is_available: document.getElementById("available").value === 'true',
+        comments: document.getElementById("comments").value.trim()
+      };
+
+      if (!customer.login) {
+        alert("Введите логин");
+        return;
+      }
+
+      if (!customer.password) {
+        alert("Введите пароль");
+        return;
+      }
+
+      if (!customer.name) {
+        alert("Введите Ф.И.О.");
+        return;
+      }
+
+      // Пробуем обновить (PUT)
+      const resPut = await fetch(`${apiUrl}/customers/${encodeURIComponent(customer.name)}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(customer)
+      });
+
+      if (resPut.ok) {
+        alert('Заказчик добавлен или обновлен');
+        clearForm();
+        return;
+      } else if (resPut.status === 404) {
+        // Если нет, создаём (POST)
+        const resPost = await fetch(`${apiUrl}/customers`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(customer)
+        });
+        if (resPost.ok) {
+          alert('Заказчик добавлен');
+          clearForm();
+        } else {
+          alert('Ошибка при добавлении заказчика');
+        }
+      } else {
+        alert('Ошибка при сохранении заказчика');
+      }
+    }
+
+    async function deleteCustomer() {
+      const name = document.getElementById("name").value.trim();
+      if (!name) {
+        alert('Введите имя заказчика для удаления');
+        return;
+      }
+
+      if (!confirm(`Удалить заказчика "${name}"?`)) return;
+
+      const res = await fetch(`${apiUrl}/customers/${encodeURIComponent(name)}`, {
+        method: 'DELETE'
+      });
+
+      if (res.ok) {
+        alert('Заказчик удален');
+        clearForm();
+      } else {
+        alert('Ошибка при удалении заказчика');
+      }
+    }
+
+    function clearForm() {
+      document.getElementById("login").value = '';
+      document.getElementById("password").value = '';
+      document.getElementById("name").value = '';
+      document.getElementById("contact_information").value = '';
+      document.getElementById("address").value = '';
+      document.getElementById("available").value = 'true';
+      document.getElementById("comments").value = '';
+    }
+  </script>
+</body>
+</html>
+
