@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <title>Добавить / Редактировать Водителя</title>
+  <style>
+    body { font-family: Arial, sans-serif; max-width: 600px; margin: 20px auto; }
+    label { display: block; margin-top: 10px; }
+    input, select, textarea { width: 100%; padding: 8px; margin-top: 4px; box-sizing: border-box; }
+    button { margin-top: 15px; margin-right: 10px; padding: 8px 15px; cursor: pointer; }
+  </style>
+</head>
+<body>
+  <nav>
+  <a href="index.html">Заказчики</a> |
+  <a href="tc.html">Техника в аренду</a> |
+  <a href="rent.html">Аренда</a>
+</nav>
+<nav>
+    <a href="rent_form.html">Добавить/Редактировать транзакцию</a> |
+    <a href="rent_import.html">Импорт/Экспорт базы транзакций</a>
+</nav>
+  <h2>Добавить / Редактировать транзакцию</h2>
+
+  <label for="rent_id">Номер транзакции</label>
+  <input id="rent_id" placeholder="203inf" />
+
+  <label for="date_of_begining">Дата начала </label>
+  <input id="date_of_begining" type="datetime" />
+
+
+  <label for="date_of_ending">Дата окончания </label>
+  <input id="date_of_ending" type="datetime" />
+
+  <label for="order_name">Ф.И.О. заказчика</label>
+  <input id="order_name" placeholder="Иванов Иван Иванович" />
+
+  <label for="tc_registration_number">Регистрационный номер ТС</label>
+  <input id="tc_registration_number" placeholder="4934AO6" />
+
+
+
+  <div>
+    <button type="button" onclick="submitRent()">Добавить / Обновить</button>
+    <button type="button" onclick="deleteRent()">Удалить</button>
+    <button type="button" onclick="clearForm()">Очистить</button>
+  </div>
+
+  <script>
+    const apiUrl = 'http://localhost:8000';
+
+    async function submitRent() {
+      const rent = {
+        rent_id: document.getElementById("rent_id").value.trim(),
+        date_of_begining: document.getElementById("date_of_begining").value.trim(),
+        date_of_ending: document.getElementById("date_of_ending").value.trim(),
+        order_name: document.getElementById("order_name").value.trim(),
+        tc_registration_number: document.getElementById("tc_registration_number").value.trim(),
+      };
+
+      if (!rent.rent_id) {
+        alert("Введите имя водителя");
+        return;
+      }
+
+      // Пробуем обновить (PUT)
+      const resPut = await fetch(`${apiUrl}/rents/${encodeURIComponent(rent.rent_id)}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(rent)
+      });
+
+      if (resPut.ok) {
+        alert('Водитель добавлен или обновлен');
+        clearForm();
+        return;
+      } else if (resPut.status === 404) {
+        // Если нет, создаём (POST)
+        const resPost = await fetch(`${apiUrl}/rents`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(rent)
+        });
+        if (resPost.ok) {
+          alert('Транзакция добавлена');
+          clearForm();
+        } else {
+          alert('Ошибка при добавлении транзакции');
+        }
+      } else {
+        alert('Ошибка при сохранении транзакции');
+      }
+    }
+
+    async function deleteRent() {
+      const rent_id = document.getElementById("rent_id").value.trim();
+      if (!rent_id) {
+        alert('Введите номер транзакции для удаления');
+        return;
+      }
+
+      if (!confirm(`Удалить транзакцию "${rent_id}"?`)) return;
+
+      const res = await fetch(`${apiUrl}/rents/${encodeURIComponent(rent_id)}`, {
+        method: 'DELETE'
+      });
+
+      if (res.ok) {
+        alert('Транзакция удалена');
+        clearForm();
+      } else {
+        alert('Ошибка при удалении транзакции');
+      }
+    }
+
+    function clearForm() {
+      document.getElementById("rent_id").value = '';
+      document.getElementById("date_of_begining").value = '';
+      document.getElementById("date_of_ending").value = '';
+      document.getElementById("order_name").value = '';
+      document.getElementById("tc_registration_number").value = '';
+    }
+  </script>
+</body>
+</html>
+
