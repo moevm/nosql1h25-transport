@@ -1,0 +1,31 @@
+
+
+services:
+  backend:
+    build: .
+    ports:
+      - "8000:8000"
+    depends_on:
+      - mongodb
+
+  mongodb:
+    image: mongo
+    restart: always
+    ports:
+      - "27017:27017"
+
+  init-mongo:
+    build:
+      context: .
+      dockerfile: Dockerfile-seed
+    depends_on:
+      - mongodb
+    environment:
+      - PYTHONUNBUFFERED=1
+
+  frontend:
+    image: nginx:alpine
+    volumes:
+      - ./frontend:/usr/share/nginx/html
+    ports:
+      - "8080:80"
