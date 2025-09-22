@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Импорт/Экспорт</title>
+</head>
+<body>
+<h2>Импорт/Экспорт</h2>
+<nav>
+  <a href="index.html">Автомобили</a> |
+  <a href="master.html">Мастера</a> |
+  <a href="garage.html">Гаражи</a>
+  <a href="flight.html">Рейсы</a>
+</nav>
+<nav>
+    <a href="car_form.html">Добавить/Редактировать автомобиль</a> |
+    <a href="car_import.html">Импорт/Экспорт базы автомобилей</a>
+</nav>
+<br>
+<button onclick="exportMasters()">Export</button>
+<input type="file" id="importFile">
+<button onclick="importMasters()">Import</button>
+<script>
+  const apiUrl = 'http://localhost:8000';
+  async function exportMasters() {
+    const res = await fetch(`${apiUrl}/masters/export`);
+    const data = await res.json();
+    const blob = new Blob([JSON.stringify(data, null, 2)], {type: 'application/json'});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'masters.json';
+    a.click();
+  }
+  async function importMasters() {
+    const file = document.getElementById("importFile").files[0];
+    const text = await file.text();
+    const data = JSON.parse(text);
+    await fetch(`${apiUrl}/masters/import`, {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify(data)
+    });
+    alert("TCs imported");
+  }
+</script>
+</body>
+</html>

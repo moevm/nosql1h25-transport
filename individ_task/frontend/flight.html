@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Flight List</title>
+  <style>
+    table, th, td { border: 1px solid black; border-collapse: collapse; padding: 5px; }
+    input, select { margin: 5px; }
+  </style>
+</head>
+<body>
+<h2>Flight Table</h2>
+<nav>
+  <a href="index.html">Автомобили</a> |
+  <a href="master.html">Мастера</a> |
+  <a href="garage.html">Гаражи</a>
+  <a href="flight.html">Рейсы</a>
+</nav>
+<nav>
+    <a href="car_form.html">Добавить/Редактировать рейс</a> |
+    <a href="car_import.html">Импорт/Экспорт базы рейсов</a>
+</nav>
+<br>
+<label>Flight ID: <input id="filterTypeflightid"></label>
+<label>Master name: <input id="filterTypemastername"></label>
+<label>Registration number: <input id="filterTyperegistrationnumber"></label>
+<label>Garage ID: <input id="filterTypegarageid"></label>
+<label>Date of begining: from <input id="filterTypedateofbeginingfrom"> to <input id="filterTypedateofbeginingto"></label>
+<label>Date of ending: from<input id="filterTypedateofendingfrom"> to <input id="filterTypedateofendingto"></label>
+<label>Comments: <input id="filterTypecomments"></label>
+
+<button onclick="fetchFlights()">Filter</button>
+<table id="flightsTable">
+  <thead>
+    <tr>
+      <th>Rent_id</th><th>Date of begining</th><th>Date of ending</th><th>Customer name</th><th>TC registration number</th>
+    </tr>
+  </thead>
+  <tbody></tbody>
+</table>
+<script>
+  const apiUrl = 'http://localhost:8000';
+  async function fetchFlights() {
+    const type_master_name = document.getElementById("filterTypemastername").value;
+    const type_registration_number = document.getElementById("filterTyperegistrationnumber").value;
+    const type_garage_id = document.getElementById("filterTypegarageid").value;
+    const type_date_of_begining_from = document.getElementById("filterTypedateofbeginingfrom").value;
+    const type_date_of_begining_to = document.getElementById("filterTypedateofbeginingto").value;
+    const type_date_of_ending_from = document.getElementById("filterTypedateofendingfrom").value;
+    const type_date_of_ending_to = document.getElementById("filterTypedateofendingto").value;
+    const type_comments = document.getElementById("filterTypecomments").value;
+
+    const params = new URLSearchParams();
+    if (type_master_name) params.append("type_master_name", type_master_name);
+    if (type_registration_number) params.append("type_registration_number", type_registration_number);
+    if (type_garage_id) params.append("type_garage_id", type_garage_id);
+    if (type_date_of_begining_from) params.append("type_date_of_begining_from", type_date_of_begining_from);
+    if (type_date_of_begining_to) params.append("type_date_of_begining_to", type_date_of_begining_to);
+    if (type_date_of_ending_from) params.append("type_date_of_ending_from", type_date_of_ending_from);
+    if (type_date_of_ending_to) params.append("type_date_of_ending_to", type_date_of_ending_to);
+    if (type_comments) params.append("type_of_comments", type_comments);
+    const res = await fetch(`${apiUrl}/flights?${params}`);
+    const data = await res.json();
+    const tbody = document.querySelector("#flightsTable tbody");
+    tbody.innerHTML = "";
+    data.forEach(d => {
+      tbody.innerHTML += `<tr>
+       
+        <td>${d.flight_id}</td>
+        <td>${d.master_name}</td>
+        <td>${d.registration_number}</td>
+        <td>${d.garage_id}</td>
+        <td>${d.date_of_begining}</td>
+        <td>${d.date_of_ending}</td>
+        <td>${d.comments}</td>
+      </tr>`;
+    });
+  }
+  fetchFlights();
+</script>
+</body>
+</html> 

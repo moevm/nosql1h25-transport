@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Garage List</title>
+  <style>
+    table, th, td { border: 1px solid black; border-collapse: collapse; padding: 5px; }
+    input, select { margin: 5px; }
+  </style>
+</head>
+<body>
+<h2>Garage Table</h2>
+<nav>
+  <a href="index.html">Автомобили</a> |
+  <a href="master.html">Мастера</a> |
+  <a href="garage.html">Гаражи</a>
+  <a href="flight.html">Рейсы</a>
+</nav>
+<nav>
+    <a href="car_form.html">Добавить/Редактировать гараж</a> |
+    <a href="car_import.html">Импорт/Экспорт базы гаражей</a>
+</nav>
+<br>
+<label>Garage ID: <input id="filterTypegarageid"></label>
+<label>Address: <input id="filterTypeaddress"></label>
+<label>Available: <input id="filterAvailable"></label>
+<label>Comments <input id="filterTypecomments"></label>
+
+
+<button onclick="fetchGarages()">Filter</button>
+<table id="garagesTable">
+  <thead>
+    <tr>
+      <th>Garage ID</th><th>Address</th><th>Available</th><th>Comments</th>
+    </tr>
+  </thead>
+  <tbody></tbody>
+</table>
+<script>
+  const apiUrl = 'http://localhost:8000';
+  async function fetchGarages() {
+    const type_garage_id = document.getElementById("filterTypegarageid").value;
+    const type_address = document.getElementById("filterTypeaddress").value;
+    const available = document.getElementById("filterAvailable").value;
+    const type_comments = document.getElementById("filterTypecomments").value;
+   
+    const params = new URLSearchParams();
+    if (type_garage_id) params.append("type_garage_id", type_garage_id);
+    if (type_address) params.append("type_address", type_address);
+    if (type_comments) params.append("type_comments", type_comments);
+    if (available !== '') params.append("is_available", available);
+    
+    const res = await fetch(`${apiUrl}/garages?${params}`);
+    const data = await res.json();
+    const tbody = document.querySelector("#garagesTable tbody");
+    tbody.innerHTML = "";
+    data.forEach(d => {
+      tbody.innerHTML += `<tr>
+       
+        <td>${d.garage_id}</td>
+        <td>${d.address}</td>
+        <td>${d.is_available}</td>
+        <td>${d.comments}</td>
+      </tr>`;
+    });
+  }
+  fetchGarages();
+</script>
+</body>
+</html> 

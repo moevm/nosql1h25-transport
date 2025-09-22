@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Car List</title>
+  <style>
+    table, th, td { border: 1px solid black; border-collapse: collapse; padding: 5px; }
+    input, select { margin: 5px; }
+  </style>
+</head>
+<body>
+<h2>Car Table</h2>
+<nav>
+  <a href="index.html">Автомобили</a> |
+  <a href="master.html">Мастера</a> |
+  <a href="garage.html">Гаражи</a>
+  <a href="flight.html">Рейсы</a>
+</nav>
+<nav>
+    <a href="car_form.html">Добавить/Редактировать автомобиль</a> |
+    <a href="car_import.html">Импорт/Экспорт базы автомобилей</a>
+</nav>
+<br>
+<label>Registration number: <input id="filterTyperegistrationnumber"></label>
+<label>Category: <input id="filterTypecategory"></label>
+<label>Model: <input id="filterTypemodel"></label>
+<label>Year: <input id="filterTypeyear"></label>
+<button onclick="fetchCars()">Filter</button>
+<table id="carsTable">
+  <thead>
+    <tr>
+      <th>Registration number</th><th>Category</th><th>Model</th><th>Year</th>
+    </tr>
+  </thead>
+  <tbody></tbody>
+</table>
+<script>
+  const apiUrl = 'http://localhost:8000';
+  async function fetchCars() {
+    const type_registration_number = document.getElementById("filterTyperegistrationnumber").value;
+    const type_category = document.getElementById("filterTypecategory").value;
+    const type_model = document.getElementById("filterTypemodel").value;
+    const type_year = document.getElementById("filterTypeyear").value;
+    const params = new URLSearchParams();
+    if (type_registration_number) params.append("type_regisrtation_number", type_registration_number);
+    if (type_category) params.append("type_category", type_category);
+    if (type_model) params.append("type_model", type_model);
+    if (type_year) params.append("type_year", type_year);
+
+    const res = await fetch(`${apiUrl}/cars?${params}`);
+    const data = await res.json();
+    const tbody = document.querySelector("#carsTable tbody");
+    tbody.innerHTML = "";
+    data.forEach(d => {
+      tbody.innerHTML += `<tr>
+        <td>${d.regiatration_number}</td>
+        <td>${d.category}</td>
+        <td>${d.model}</td>
+        <td>${d.year}</td>
+      </tr>`;
+    });
+  }
+  fetchCars();
+</script>
+</body>
+</html> 

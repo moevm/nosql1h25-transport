@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <title>Добавить / Редактировать Водителя</title>
+  <style>
+    body { font-family: Arial, sans-serif; max-width: 600px; margin: 20px auto; }
+    label { display: block; margin-top: 10px; }
+    input, select, textarea { width: 100%; padding: 8px; margin-top: 4px; box-sizing: border-box; }
+    button { margin-top: 15px; margin-right: 10px; padding: 8px 15px; cursor: pointer; }
+  </style>
+</head>
+<body>
+  <nav>
+  <a href="index.html">Автомобили</a> |
+  <a href="master.html">Мастера</a> |
+  <a href="garage.html">Гаражи</a>
+  <a href="flight.html">Рейсы</a>
+</nav>
+<nav>
+    <a href="car_form.html">Добавить/Редактировать автомобиль</a> |
+    <a href="car_import.html">Импорт/Экспорт базы автомобилей</a>
+</nav>
+  <h2>Добавить / Редактировать ТС</h2>
+
+  <label for="name">Регистрационный номер ТС</label>
+  <input id="name" placeholder="203inf" />
+
+  <label for="qualification">Вид ТС</label>
+  <input id="qualification" placeholder="грузовик" />
+
+
+  <label for="available">Доступность</label>
+  <select id="available">
+    <option value="true">Доступен</option>
+    <option value="false">Недоступен</option>
+  </select>
+
+  <label for="comments">Комментарии</label>
+  <textarea id="comments" placeholder="Работает по выходным"></textarea>
+
+  <div>
+    <button type="button" onclick="submitMaster()">Добавить / Обновить</button>
+    <button type="button" onclick="deleteMaster()">Удалить</button>
+    <button type="button" onclick="clearForm()">Очистить</button>
+  </div>
+
+  <script>
+    const apiUrl = 'http://localhost:8000';
+
+    async function submitMaster() {
+      const master = {
+        name: document.getElementById("name").value.trim(),
+        qualification: document.getElementById("qualification").value.trim(),
+        is_available: document.getElementById("available").value === 'true',
+        comments: document.getElementById("comments").value.trim()
+      };
+
+      if (!master.name) {
+        alert("Введите номер тс");
+        return;
+      }
+
+      // Пробуем обновить (PUT)
+      const resPut = await fetch(`${apiUrl}/masters/${encodeURIComponent(master.name)}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(master)
+      });
+
+      if (resPut.ok) {
+        alert('ТС добавлено или обновлено');
+        clearForm();
+        return;
+      } else if (resPut.status === 404) {
+        // Если нет, создаём (POST)
+        const resPost = await fetch(`${apiUrl}/masters`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(master)
+        });
+        if (resPost.ok) {
+          alert('ТС добавлено');
+          clearForm();
+        } else {
+          alert('Ошибка при добавлении ТС');
+        }
+      } else {
+        alert('Ошибка при сохранении ТС');
+      }
+    }
+
+    async function deleteMaster() {
+      const name = document.getElementById("name").value.trim();
+      if (!name) {
+        alert('Введите номер тс для удаления');
+        return;
+      }
+
+      if (!confirm(`Удалить тс "${name}"?`)) return;
+
+      const res = await fetch(`${apiUrl}/masters/${encodeURIComponent(name)}`, {
+        method: 'DELETE'
+      });
+
+      if (res.ok) {
+        alert('тс удален');
+        clearForm();
+      } else {
+        alert('Ошибка при удалении тс');
+      }
+    }
+
+    function clearForm() {
+      document.getElementById("name").value = '';
+      document.getElementById("qualification").value = '';
+      document.getElementById("available").value = 'true';
+      document.getElementById("comments").value = '';
+    }
+  </script>
+</body>
+</html>
+
