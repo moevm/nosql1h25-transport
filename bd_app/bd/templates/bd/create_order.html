@@ -1,0 +1,52 @@
+{% extends 'main/layout.html' %}
+
+{% block title %}Создать заказ{% endblock %}
+
+{% block content %}
+<div class="features">
+    <h1>Форма для создания заказа</h1>
+    <form method="post" action="{% url 'create_order' %}" id = "myform">
+        {% csrf_token %}
+        <div class="form-group">
+            <label for="{{ form.date_of_accomplishment.id_for_label }}" class="col-sm-10 col-form-label">Дата создания:</label>
+            <div class="col-sm-10 mt-2 text-center">
+            {{form.date_of_creation}}
+            {{form.date_of_creation.errors}} </br>
+            </div>
+        </div>
+        <div class="form-group">
+            <label for="{{ form.date_of_accomplishment.id_for_label }}" class="col-sm-10 col-form-label">Дата выполнения:</label>
+            <div class="col-sm-10 mt-2 text-center">
+                {{form.date_of_accomplishment}}
+                {{form.date_of_accomplishment.errors}} </br>
+            </div>
+        </div>
+        <div class="form-group">
+            <label for="{{ form.date_of_accomplishment.id_for_label }}" class="col-sm-10 col-form-label">Адрес назначения:</label>
+            <div class="col-sm-10 mt-2 text-center">
+                {{form.destination_address}}
+                {{form.destination_address.errors}} </br>
+            </div>
+        </div>
+        <div class="form-group">
+            <label for="{{ form.date_of_accomplishment.id_for_label }}" class="col-sm-10 col-form-label">Вид ТС:</label>
+            <div class="col-sm-10 mt-2 text-center">
+            {{form.type_tc_id}}
+            {{form.type_tc_id.errors}} </br>
+            </div>
+        </div>
+        
+        <span>{{error}}</span>
+        <button class="btn btn-success" type="submit">Создать заказ</button>
+    </form>
+   
+    
+</div>
+<script>
+    document.getElementById('myform').addEventListener('submit', function(event) {
+      event.preventDefault(); // Предотвращает отправку формы по умолчанию
+      // Здесь можно добавить код для обработки формы (например, отправка данных через AJAX)
+      console.log('Form submitted (without page reload)!');
+    });
+  </script>
+{% endblock %}

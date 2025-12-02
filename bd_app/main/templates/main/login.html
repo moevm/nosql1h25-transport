@@ -1,0 +1,54 @@
+{% extends 'main/layout.html' %}
+{% block title %}Авторизация{% endblock %}
+{% block content %}
+<div class="entrance">
+    <h2>Вход в панель администратора</h2>
+    <form id="loginForm">
+        <p>
+            <input type="text" id="login" name="login" placeholder="Логин" required value="admin" />
+        </p>
+        <p>
+            <input type="password" id="password" name="password" placeholder="Пароль" required value="123" />
+        </p>
+        <button type="submit">Войти</button>
+    </form>
+</div>
+
+<script>
+    document.getElementById("loginForm").addEventListener("submit", async function(event) {
+        event.preventDefault();
+
+        const login = document.getElementById("login").value;
+        const password = document.getElementById("password").value;
+
+        try {
+            const response = await fetch("http://127.0.0.1:8093/admin/", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Accept": "application/json"
+                },
+                body: JSON.stringify({
+                    login: login,
+                    password: password
+                })
+            });
+
+            const data = await response.json();
+
+            if (response.ok) {
+                // alert("Вход выполнен успешно!");
+                window.location.href = "/admin/statistics";
+            } else {
+                alert(data.error || "Неверный логин или пароль");
+            }
+        } catch (error) {
+            console.error("Ошибка запроса:", error);
+            alert("Ошибка подключения к серверу. Проверьте соединение.");
+        }
+
+    });
+
+    
+</script>
+{% endblock %}
