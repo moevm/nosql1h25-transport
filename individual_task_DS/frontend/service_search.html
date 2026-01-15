@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8"/>
+  <title>Поиск по ТО</title>
+</head>
+<body>
+  <h2>Фильтр по истории ТО</h2>
+  <label>Описание: <input type="text" id="desc"></label>
+  <label>Запчасть: <input type="text" id="part"></label>
+  <label>Дата от: <input type="date" id="min_date"></label>
+  <label>Дата до: <input type="date" id="max_date"></label>
+  <label>Пробег от: <input type="number" id="min_mileage"></label>
+  <label>Пробег до: <input type="number" id="max_mileage"></label>
+  <label>Стоимость от: <input type="number" id="min_cost"></label>
+  <label>Стоимость до: <input type="number" id="max_cost"></label>
+  <button onclick="searchService()">Искать</button>
+  <button onclick="clearFilters()">Очистить</button>
+  <p><a href="index.html">Назад</a></p>
+
+  <div id="results"></div>
+
+  <script>
+    const apiUrl = "http://127.0.0.1:8000";
+    const resultsDiv = document.getElementById("results");
+
+    document.getElementById("btnSearch").addEventListener("click", searchService);
+    document.getElementById("btnClear").addEventListener("click", clearFilters);
+
+    async function searchService() {
+      let params = {};
+      if (desc.value) params.description = desc.value;
+      if (part.value) params.replaced_part = part.value;
+      if (min_date.value) params.min_date = min_date.value;
+      if (max_date.value) params.max_date = max_date.value;
+      if (min_mileage.value) params.min_mileage = Number(min_mileage.value);
+      if (max_mileage.value) params.max_mileage = Number(max_mileage.value);
+      if (min_cost.value) params.min_cost = Number(min_cost.value);
+      if (max_cost.value) params.max_cost = Number(max_cost.value);
+
+      const url = `${apiUrl}/service_search?` + new URLSearchParams(params);
+      try {
+        const res = await fetch(url);
+        const cars = await res.json();
+        renderResults(cars);
+      } catch (err) {
+        console.error("Ошибка при поиске ТО:", err);
+        resultsDiv.innerHTML = "<p>Ошибка загрузки данных</p>";
+      }
+    }
+
+    function renderResults(cars) {
+      if (!cars || cars.length === 0) {
+        resultsDiv.innerHTML = "<p>Ничего не найдено.</p>";
+        return;
+      }
+      resultsDiv.innerHTML = "";
+      cars.forEach(car => {
+        if (!car.service_history || car.service_history.length === 0) return;
+
+        let html = `<h3>${escapeHtml(car.name)} (${escapeHtml(car.license_plate)})</h3>`;
+        html += `<table border="1">
+          <tr><th>Дата</th><th>Описание</th><th>Детали</th><th>Пробег</th><th>Стоимость</th></tr>`;
+        car.service_history.forEach(ep => {
+          html += `<tr>
+            <td>${escapeHtml(ep.date || "")}</td>
+            <td>${escapeHtml(ep.description || "")}</td>
+            <td>${escapeHtml((ep.replaced_parts || []).join(", "))}</td>
+            <td>${escapeHtml(ep.mileage || "")}</td>
+            <td>${escapeHtml(ep.cost || "")}</td>
+          </tr>`;
+        });
+        html += `</table>`;
+        resultsDiv.innerHTML += html;
+      });
+    }
+
+    function clearFilters() {
+      desc.value = "";
+      part.value = "";
+      min_date.value = "";
+      max_date.value = "";
+      min_mileage.value = "";
+      max_mileage.value = "";
+      min_cost.value = "";
+      max_cost.value = "";
+      resultsDiv.innerHTML = "";
+    }
+
+    function escapeHtml(s) {
+      if (!s && s !== 0) return "";
+      return String(s).replace(/[&<>"']/g, ch => ({
+        '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
+      })[ch]);
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <title>Добавить / Редактировать автомобиль</title>
+</head>
+<body>
+  <h1 id="formTitle">Добавить автомобиль</h1>
+  <form onsubmit="event.preventDefault(); saveCar();">
+    <label>Название: <input type="text" id="name"></label><br>
+    <label>Модель: <input type="text" id="model"></label><br>
+    <label>Госномер: <input type="text" id="license_plate"></label><br>
+    <label>Категория: <input type="text" id="category"></label><br>
+    <label>Год выпуска: <input type="number" id="year"></label><br>
+    <h3>История ТО</h3>
+    <textarea id="service_history" rows="5" cols="40" placeholder="JSON-массив записей ТО"></textarea><br>
+    <button type="submit">Сохранить</button>
+    <a href="index.html">Назад</a>
+  </form>
+
+  <script>
+    const apiUrl = "http://localhost:8000";
+    const params = new URLSearchParams(window.location.search);
+    const editPlate = params.get("edit");
+
+    if (editPlate) {
+      fetch(`${apiUrl}/cars`)
+        .then(res => res.json())
+        .then(cars => {
+          const car = cars.find(c => c.license_plate === editPlate);
+          if (car) {
+            document.getElementById("name").value = car.name;
+            document.getElementById("model").value = car.model;
+            document.getElementById("license_plate").value = car.license_plate;
+            document.getElementById("category").value = car.category || "";
+            document.getElementById("year").value = car.year;
+            document.getElementById("service_history").value = JSON.stringify(car.service_history, null, 2);
+          } else {
+            alert("Автомобиль не найден");
+          }
+        })
+        .catch(err => {
+          console.error("Ошибка при загрузке автомобилей:", err);
+        });
+    }
+
+    async function saveCar() {
+      const car = {
+        name: document.getElementById("name").value,
+        model: document.getElementById("model").value,
+        license_plate: document.getElementById("license_plate").value,
+        category: document.getElementById("category").value,
+        year: parseInt(document.getElementById("year").value),
+        service_history: document.getElementById("service_history").value
+          ? JSON.parse(document.getElementById("service_history").value)
+          : []
+      };
+
+      if (!car.name) {
+        alert("Введите название автомобиля");
+        return;
+      }
+      if (!car.license_plate) {
+        alert("Введите госномер");
+        return;
+      }
+      if (isNaN(car.year)) {
+        alert("Введите корректный год выпуска");
+        return;
+      }
+
+      const resPut = await fetch(`${apiUrl}/cars/${encodeURIComponent(car.license_plate)}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(car)
+      });
+
+      if (resPut.ok) {
+        alert('Автомобиль добавлен или обновлен');
+        clearForm();
+        return;
+      } else if (resPut.status === 404) {
+        const resPost = await fetch(`${apiUrl}/cars`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(car)
+        });
+        if (resPost.ok) {
+          alert('Автомобиль добавлен');
+          clearForm();
+        } else {
+          alert('Ошибка при добавлении автомобиля');
+        }
+      } else {
+        alert('Ошибка при сохранении автомобиля');
+      }
+    }
+
+  </script>
+</body>
+</html>
