@@ -1,0 +1,30 @@
+services:
+  backend:
+    build: .
+    ports:
+      - "127.0.0.1:8000:8000"
+    depends_on:
+      - mongodb
+    volumes:
+      - ./backend:/app
+    environment:
+      - PYTHONUNBUFFERED=1
+
+  frontend:
+    image: nginx:alpine
+    ports:
+      - "127.0.0.1:8080:80"
+    volumes:
+      - ./frontend:/usr/share/nginx/html
+
+  mongodb:
+    image: mongo:6
+    restart: always
+    volumes:
+      - mongo_data:/data/db
+    # Порт НЕ маппим наружу — MongoDB доступна только изнутри
+    # ports:
+    #   - "27017:27017"
+
+volumes:
+  mongo_data:

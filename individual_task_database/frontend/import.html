@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Импорт/Экспорт</title>
+</head>
+<body>
+<h2>Импорт/Экспорт</h2>
+<nav>
+  <a href="index.html">Таблица</a> |
+  <a href="form.html">Добавить/Редактировать</a> |
+  <a href="import.html">Импорт/Экспорт</a>
+</nav>
+<br>
+<button onclick="exportDrivers()">Export</button>
+<input type="file" id="importFile">
+<button onclick="importDrivers()">Import</button>
+<script>
+  const apiUrl = 'http://localhost:8000';
+  async function exportDrivers() {
+    const res = await fetch(`${apiUrl}/drivers/export`);
+    const data = await res.json();
+    const blob = new Blob([JSON.stringify(data, null, 2)], {type: 'application/json'});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'drivers.json';
+    a.click();
+  }
+  async function importDrivers() {
+    const file = document.getElementById("importFile").files[0];
+    const text = await file.text();
+    const data = JSON.parse(text);
+    await fetch(`${apiUrl}/drivers/import`, {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify(data)
+    });
+    alert("Drivers imported");
+  }
+</script>
+</body>
+</html>
