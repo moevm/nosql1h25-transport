@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <title>Добавить / Редактировать Водителя</title>
+  <style>
+    body { font-family: Arial, sans-serif; max-width: 600px; margin: 20px auto; }
+    label { display: block; margin-top: 10px; }
+    input, select, textarea { width: 100%; padding: 8px; margin-top: 4px; box-sizing: border-box; }
+    button { margin-top: 15px; margin-right: 10px; padding: 8px 15px; cursor: pointer; }
+  </style>
+</head>
+<body>
+  <nav>
+  <a href="index.html">Автомобили</a> |
+  <a href="master.html">Мастера</a> |
+  <a href="garage.html">Гаражи</a>
+  <a href="flight.html">Рейсы</a>
+</nav>
+<nav>
+    <a href="garage_form.html">Добавить/Редактировать автомобиль</a> |
+    <a href="garage_import.html">Импорт/Экспорт базы автомобилей</a>
+</nav>
+  <h2>Добавить / Редактировать транзакцию</h2>
+
+  <label for="garage_id">ID гаража</label>
+  <input id="garage_id" placeholder="203inf" />
+
+  <label for="address">Адрес </label>
+  <input id="address" placeholder="г. Сагкт-Петербург, ул. Марата, д. 5" />
+
+  <label for="comments">Комментарии</label>
+  <input id="comments" />
+
+  <label for="is_available">Доступность</label>
+    <select id="is_available">
+      <option value="true">Доступен</option>
+      <option value="false">Недоступен</option>
+    </select>
+
+
+  <div>
+    <button type="button" onclick="submitGarage()">Добавить / Обновить</button>
+    <button type="button" onclick="deleteGarage()">Удалить</button>
+    <button type="button" onclick="clearForm()">Очистить</button>
+  </div>
+
+  <script>
+    const apiUrl = 'http://localhost:8000';
+
+    async function submitGarage() {
+      const garage = {
+        garage_id: document.getElementById("garage_id").value.trim(),
+        address: document.getElementById("address").value.trim(),
+        is_available: document.getElementById("is_available").value.trim(),
+        comments: document.getElementById("comments").value.trim(),
+      };
+
+      if (!garage.garage_id) {
+        alert("Введите ID гаража");
+        return;
+      }
+
+      // Пробуем обновить (PUT)
+      const resPut = await fetch(`${apiUrl}/garages/${encodeURIComponent(garage.garage_id)}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(garage)
+      });
+
+      if (resPut.ok) {
+        alert('Гараж добавлен или обновлен');
+        clearForm();
+        return;
+      } else if (resPut.status === 404) {
+        // Если нет, создаём (POST)
+        const resPost = await fetch(`${apiUrl}/garages`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(garage)
+        });
+        if (resPost.ok) {
+          alert('Гараж добавлена');
+          clearForm();
+        } else {
+          alert('Ошибка при добавлении гаража');
+        }
+      } else {
+        alert('Ошибка при сохранении гаража');
+      }
+    }
+
+    async function deleteGarage() {
+      const garage_id = document.getElementById("garage_id").value.trim();
+      if (!garage_id) {
+        alert('Введите номер гаража для удаления');
+        return;
+      }
+
+      if (!confirm(`Удалить гараж "${garage_id}"?`)) return;
+
+      const res = await fetch(`${apiUrl}/garages/${encodeURIComponent(garage_id)}`, {
+        method: 'DELETE'
+      });
+
+      if (res.ok) {
+        alert('Гараж удалена');
+        clearForm();
+      } else {
+        alert('Ошибка при удалении гаража');
+      }
+    }
+
+    function clearForm() {
+      document.getElementById("garage_id").value = '';
+      document.getElementById("address").value = '';
+      document.getElementById("is_available").value = '';
+      document.getElementById("comments").value = '';
+    }
+  </script>
+</body>
+</html>
+

@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Master List</title>
+  <style>
+    table, th, td { border: 1px solid black; border-collapse: collapse; padding: 5px; }
+    input, select { margin: 5px; }
+  </style>
+</head>
+<body>
+<h2>Master Table</h2>
+<nav>
+  <a href="index.html">Автомобили</a> |
+  <a href="master.html">Мастера</a> |
+  <a href="garage.html">Гаражи</a>
+  <a href="flight.html">Рейсы</a>
+</nav>
+<nav>
+    <a href="master_form.html">Добавить/Редактировать автомобиль</a> |
+    <a href="master_import.html">Импорт/Экспорт базы автомобилей</a>
+</nav>
+<br>
+<label>Name: <input id="filterName"></label>
+<label>Qualification: <input id="filterTypequalification"></label>
+<label>Experience From: <input id="filterExperienceMin" type="number"></label>
+<label>To: <input id="filterExperienceMax" type="number"></label>
+<label>Available:
+  <select id="filterAvailable">
+    <option value="">Any</option>
+    <option value="true">Yes</option>
+    <option value="false">No</option>
+  </select>
+</label>
+<label>Comments: <input id="filterTypecomments"></label>
+<button onclick="fetchMasters()">Filter</button>
+<table id="mastersTable">
+  <thead>
+    <tr>
+      <th>Name</th><th>Qualification</th><th>Experience</th><th>Available</th><th>Comments</th>
+    </tr>
+  </thead>
+  <tbody></tbody>
+</table>
+<script>
+  const apiUrl = 'http://localhost:8000';
+  async function fetchMasters() {
+    const type_name = document.getElementById("filterName").value;
+    const type_comments = document.getElementById("filterTypecomments").value;
+    const type_qualification = document.getElementById("filterTypequalification").value;
+    const min = document.getElementById("filterExperienceMin").value;
+    const max = document.getElementById("filterExperienceMax").value;
+    const available = document.getElementById("filterAvailable").value;
+    const params = new URLSearchParams();
+    if (type_name) params.append("name", type_name);
+    if (type_comments) params.append("type_comments", type_comments);
+    if (type_qualification) params.append("type_qualification", type_qualification);
+    if (min) params.append("min_experience", min);
+    if (max) params.append("max_experience", max);
+    if (available !== '') params.append("is_available", available);
+    const res = await fetch(`${apiUrl}/masters?${params}`);
+    const data = await res.json();
+    const tbody = document.querySelector("#mastersTable tbody");
+    tbody.innerHTML = "";
+    data.forEach(d => {
+      tbody.innerHTML += `<tr>
+        <td>${d.name}</td>
+        <td>${d.qualification}</td>
+        <td>${d.experience_years}</td>
+        <td>${d.is_available}</td>
+        <td>${d.comments || ''}</td>
+      </tr>`;
+    });
+  }
+  fetchMasters();
+</script>
+</body>
+</html>
